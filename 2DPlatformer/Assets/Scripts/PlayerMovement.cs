@@ -5,6 +5,7 @@ using System.Data;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
 
 public class PlayerInput : MonoBehaviour
 {
@@ -19,8 +20,12 @@ public class PlayerInput : MonoBehaviour
     // Adding animator here bc it's easier to reference 
     //[SerializeField] private Animator animator;
     private Animator animator;
-    
     private bool facingRight = true;
+
+    // For Collectibles
+    [SerializeField] Tilemap tilemapC;  // Collectibles tilemap - so can delete a collectible (tile) once "collected"
+    private Vector3Int cellPosition;    
+
     
     void Start()
     {
@@ -32,7 +37,6 @@ public class PlayerInput : MonoBehaviour
     void OnMove(InputValue value)
     {
         movement = value.Get<float>();
-        Debug.Log(movement);
         
         // These get added after Flip();
         if (movement < 0 && facingRight == true)
@@ -71,14 +75,12 @@ public class PlayerInput : MonoBehaviour
     {
         Vector2 jumpAdder = new Vector2(rb.linearVelocity.x, jumpHeight);
         rb.AddForce(jumpAdder, ForceMode2D.Impulse);
-        Debug.Log("Is Jumping");        
     }
 
     // Consider adding a bool for negative downward velocity in order to determine isFalling
     
     void OnCollisionExit2D(Collision2D other)
     {
-        Debug.Log("Is not Jumping");
         isGrounded = false;
     }
 
@@ -88,6 +90,17 @@ public class PlayerInput : MonoBehaviour
         if (other.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
+        }
+    }
+
+    void OnTriggerStay2D(Collider2D other)  // trigger once player ON collectible
+    {
+        if (other.gameObject.CompareTag("Collectibles"))  // makes collectible disappear once "collected" by player
+        {
+            //Debug.Log("touched a collectible!");
+            cellPosition = tilemapC.WorldToCell(transform.position);  // gets player pos (which is same as collectible tile pos)
+            tilemapC.SetTile(cellPosition, null);  // deletes collectible
+            //Debug.Log(cellPosition);
         }
     }
 
